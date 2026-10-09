@@ -1,0 +1,12 @@
+# 环境配置：default 段为所有环境共用的默认值，其余键为环境名。
+default:
+  timeout: 10
+  verify_ssl: false
+  username: tester
+  password: Test@123456
+
+dev:
+  base_url: http://127.0.0.1:8123
+
+ci:
+  base_url: http://127.0.0.1:8123
