@@ -1,0 +1,97 @@
+# CI：接口回归 + 数值校验 + 概率检验
+#
+# 设计说明（面试可讲）：
+# 1. 门禁分层：确定性检查（回归、数值批量校验）在每次 push/PR 阻塞执行；
+#    统计性检查（抽卡概率）固有误报率 α=0.001，因此只在 push 到 main 与定时任务执行，
+#    避免 PR 上偶发红灯——这是"统计类断言不能当硬门禁"的工程取舍。
+# 2. 被测服务无需外部依赖：conftest 与校验脚本都会自行拉起进程（随机空闲端口），
+#    因此 runner 不需要 docker-compose 或预置环境。
+# 3. 产物必须可下载：报告/日志/Allure 原始结果一律上传，失败时靠它们定位。
+# 4. 最小权限：只读 contents，不授予多余 scope。
+
+name: api-test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: "0 19:00 * * *" # 每天 03:00（UTC+8）
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: api-test-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHONUTF8: "1"
+  PYTHONIOENCODING: utf-8
+  PYTHONDONTWRITEBYTECODE: "1"
+
+jobs:
+  regression:
+    name: 接口回归与数值校验
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: 安装依赖（版本锁定）
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+
+      - name: 被测服务契约自检（53 项）
+        run: |
+          python -m mock_server.app --port 8123 &
+          for _ in $(seq 1 30); do
+            curl -sf http://127.0.0.1:8123/health >/dev/null && break
+            sleep 1
+          done
+          python scripts/smoke_mock_server.py --base-url http://127.0.0.1:8123
+
+      - name: 接口回归（136 条用例，4 进程并发）
+        run: python -m pytest -n 4 --alluredir=allure-results
+
+      - name: 数值批量校验（独立复算 + 边界网格）
+        run: python scripts/verify_damage_formula.py
+
+      - name: 上传测试产物
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-artifacts-${{ github.run_number }}
+          path: |
+            reports/report.html
+            logs/
+            allure-results/
+          if-no-files-found: warn
+          retention-days: 14
+
+  probability:
+    name: 抽卡概率统计检验
+    # 统计类断言有固有误报率（α=0.001），不放在 PR 门禁上
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: 安装依赖（版本锁定）
+        run: python -m pip install -r requirements.txt
+
+      - name: 10000 抽卡方拟合优度检验
+        run: python scripts/verify_gacha_probability.py --draws 10000

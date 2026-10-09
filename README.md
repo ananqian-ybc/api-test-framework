@@ -54,6 +54,19 @@ python -m venv .venv
 
 > 对着已有环境跑：设置 `API_TEST_BASE_URL=http://host:port`，框架会跳过本地拉起被测服务。
 
+### CI 状态徽章
+
+推到自己的 GitHub 仓库后，把下面这段（替换用户名与仓库名）贴到本文件最上方，
+让 CI 状态变成简历/README 上可点开的证据：
+
+```markdown
+![api-test](https://github.com/<你的用户名>/api-test-framework/actions/workflows/api-test.yml/badge.svg)
+```
+
+`.github/workflows/api-test.yml` 分两层门禁：**确定性检查**（136 条回归 + 587 组数值校验）
+在每次 push/PR 阻塞执行；**统计性检查**（10000 抽概率检验，固有误报率 α=0.001）
+只在 push 到 main 与每日定时任务执行——统计类断言不适合当 PR 硬门禁。
+
 ---
 
 ## 3. 架构分层

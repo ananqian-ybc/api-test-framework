@@ -32,7 +32,8 @@
 - [x] pytest-html 默认报告 + Allure 可选（`--alluredir`）
 - [x] `-n 4` 并发通过（AC6）
 - [x] 验收 AC1、AC7 通过
-- [ ] `.github/workflows/api-test.yml`（AC8，仓库托管到 GitHub 时补）
+- [x] `.github/workflows/api-test.yml`：确定性门禁（136 回归 + 587 数值）阻塞 push/PR，
+      统计门禁（10000 抽概率检验）仅主干与每日定时 → AC8
 
 ## M5 独立验证工具与文档 【完成】
 - [x] `scripts/verify_gacha_probability.py`：10000 抽卡方检验（关闭保底的专用实例）→ AC10
@@ -50,7 +51,7 @@
 - **可量化的简历数据**：11 个接口｜136 条用例｜10000 抽概率检验｜587 组数值校验｜并发 4 进程
 - **踩坑记录**：见 `tasks/lessons.md`
 - **下一步（按价值排序）**：
-  1. 接入 GitHub Actions（AC8）并把 `-n 4` 作为 CI 默认
+  1. 推到 GitHub 并换上 CI 徽章（步骤见 README「CI 状态徽章」）
   2. Allure CLI 落地并附报告截图（简历附件用）
   3. 增加弱网/重连专项：延迟注入 + 连接复用 + 幂等重放
-  4. 抽卡概率检验纳入定时任务（每日跑一次，防配置被误改）
+  4. 游戏场景用例设计题库与模拟面试（W1/W8 任务）
