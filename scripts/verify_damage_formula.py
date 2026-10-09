@@ -24,6 +24,7 @@ import socket
 import subprocess
 import sys
 import time
+import uuid
 from pathlib import Path
 from typing import Any, Iterator
 
@@ -32,7 +33,6 @@ import yaml
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_TABLE = PROJECT_ROOT / "data" / "battle_damage_cases.yaml"
-ACCOUNT = "damage_probe"
 MAX_DIFF_DETAILS = 10
 
 
@@ -166,17 +166,19 @@ def main() -> int:
     try:
         login = requests.post(
             f"{base_url}/api/login",
-            json={"username": ACCOUNT, "password": "Test@123456"},
+            json={"username": f"damage_probe_{uuid.uuid4().hex[:8]}", "password": "Test@123456"},
             timeout=5,
         )
         login.raise_for_status()
         token = login.json()["token"]
-        requests.post(
+        created = requests.post(
             f"{base_url}/api/role/create",
             json={"nickname": "数值校验号"},
             headers={"Authorization": f"Bearer {token}"},
             timeout=5,
         )
+        if created.status_code != 201:
+            raise RuntimeError(f"创角失败（{created.status_code}）：{created.text}")
 
         cases: list[tuple[str, dict[str, Any], int]] = []
         if args.table.is_file():

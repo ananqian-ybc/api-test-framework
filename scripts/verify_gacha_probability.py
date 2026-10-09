@@ -25,6 +25,7 @@ import socket
 import subprocess
 import sys
 import time
+import uuid
 from pathlib import Path
 
 import requests
@@ -34,7 +35,6 @@ PUBLISHED_RATES: dict[str, float] = {"SSR": 0.016, "SR": 0.13, "R": 0.854}
 # 卡方临界值：自由度 2，显著性水平 0.001
 CHI_SQUARE_CRITICAL_DF2_P001 = 13.8155
 Z_95 = 1.96
-ACCOUNT = "probability_probe"
 
 
 def free_port() -> int:
@@ -75,7 +75,7 @@ def start_dedicated_server(port: int) -> subprocess.Popen[bytes]:
 def login(base_url: str) -> str:
     response = requests.post(
         f"{base_url}/api/login",
-        json={"username": ACCOUNT, "password": "Test@123456"},
+        json={"username": f"probability_probe_{uuid.uuid4().hex[:8]}", "password": "Test@123456"},
         timeout=5,
     )
     response.raise_for_status()
@@ -125,13 +125,15 @@ def main() -> int:
 
     try:
         token = login(base_url)
-        if not requests.post(
+        created = requests.post(
             f"{base_url}/api/role/create",
             json={"nickname": "概率检验号"},
             headers={"Authorization": f"Bearer {token}"},
             timeout=5,
-        ).ok:
-            raise RuntimeError("创角失败（账号可能已存在角色）")
+        )
+        # 每次运行都用全新账号，因此 201 是唯一合法结果；出现其它状态说明服务端异常
+        if created.status_code != 201:
+            raise RuntimeError(f"创角失败（{created.status_code}）：{created.text}")
 
         observed = {rarity: 0 for rarity in PUBLISHED_RATES}
         remaining = args.draws
