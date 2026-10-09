@@ -16,7 +16,8 @@ on:
     branches: [main]
   pull_request:
   schedule:
-    - cron: "0 19:00 * * *" # 每天 03:00（UTC+8）
+    # POSIX cron 必须恰好 5 段：分 时 日 月 周（写成 19:00 会导致整个工作流 startup_failure）
+    - cron: "0 19 * * *" # 每天 19:00 UTC = 次日 03:00（UTC+8）
   workflow_dispatch:
 
 permissions:

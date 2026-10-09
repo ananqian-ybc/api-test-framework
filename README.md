@@ -1,5 +1,7 @@
 # 游戏服务端接口自动化测试框架
 
+![api-test](https://github.com/ananqian-ybc/api-test-framework/actions/workflows/api-test.yml/badge.svg)
+
 > 分层、可离线跑通、可接 CI 的**游戏服务端接口 + 数值/概率**自动化测试项目，
 > 自带一个可复现的被测服务（stdlib 实现，零第三方依赖），clone 下来一条命令即可跑出报告。
 
@@ -54,18 +56,20 @@ python -m venv .venv
 
 > 对着已有环境跑：设置 `API_TEST_BASE_URL=http://host:port`，框架会跳过本地拉起被测服务。
 
-### CI 状态徽章
+### CI 门禁设计
 
-推到自己的 GitHub 仓库后，把下面这段（替换用户名与仓库名）贴到本文件最上方，
-让 CI 状态变成简历/README 上可点开的证据：
+`.github/workflows/api-test.yml` 分两层门禁：
 
-```markdown
-![api-test](https://github.com/<你的用户名>/api-test-framework/actions/workflows/api-test.yml/badge.svg)
-```
+| 层 | 内容 | 触发时机 | 理由 |
+|---|---|---|---|
+| 确定性检查 | SUT 契约自检 53 项 → 136 条回归 `-n 4` → 587 组数值校验 | 每次 push / PR，**阻塞** | 结果确定，红灯必是问题 |
+| 统计性检查 | 10000 抽卡方拟合优度检验 | 仅 push 到 main + 每日定时 | 固有误报率 α=0.001，不适合当 PR 硬门禁 |
 
-`.github/workflows/api-test.yml` 分两层门禁：**确定性检查**（136 条回归 + 587 组数值校验）
-在每次 push/PR 阻塞执行；**统计性检查**（10000 抽概率检验，固有误报率 α=0.001）
-只在 push 到 main 与每日定时任务执行——统计类断言不适合当 PR 硬门禁。
+产物（`reports/report.html`、`logs/`、`allure-results/`）随运行上传，失败时靠它们定位。
+
+> 踩过的坑：cron 写成 `0 19:00 * * *`（6 段）会让整个工作流 `startup_failure`——
+> 表现为 **0 个 job、无注解、`name` 回退显示成文件路径**；本地 YAML 能解析但 GitHub 拒绝。
+> 正确写法是 5 段 POSIX cron：`0 19 * * *`。
 
 ---
 
