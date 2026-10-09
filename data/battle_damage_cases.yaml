@@ -1,0 +1,57 @@
+# 伤害公式数值表：期望值由公示公式独立手算/独立实现得出，不由被测代码生成
+# 公式：floor( max(atk*ratio - defense*(1-penetration), 1) * (crit?crit_multiplier:1) * (1+damage_bonus) )
+# 规则：只在最后一步向下取整；伤害下限 1；crit 显式指定以排除随机性
+- case_id: damage_base_hit
+  title: 基础命中 100*1.0-50=50
+  payload: {atk: 100, defense: 50, skill_ratio: 1.0, crit: false}
+  expected_damage: 50
+
+- case_id: damage_crit_hit
+  title: 暴击 50*2.0=100
+  payload: {atk: 100, defense: 50, skill_ratio: 1.0, crit: true}
+  expected_damage: 100
+
+- case_id: damage_minimum_floor
+  title: 攻低防高时伤害下限为 1
+  payload: {atk: 10, defense: 1000, skill_ratio: 1.0, crit: false}
+  expected_damage: 1
+
+- case_id: damage_zero_atk
+  title: 攻击力为 0 时仍保底 1 点伤害
+  payload: {atk: 0, defense: 0, skill_ratio: 1.0, crit: false}
+  expected_damage: 1
+
+- case_id: damage_zero_defense
+  title: 防御为 0 时打出全额伤害
+  payload: {atk: 333, defense: 0, skill_ratio: 1.0, crit: false}
+  expected_damage: 333
+
+- case_id: damage_penetration
+  title: 穿透 20% 只作用于防御 1500-500*0.8=1100
+  payload: {atk: 1000, defense: 500, skill_ratio: 1.5, penetration: 0.2, crit: false}
+  expected_damage: 1100
+
+- case_id: damage_multi_zones
+  title: 暴击与增伤乘区叠乘 1100*2.5*1.35=3712.5 -> 3712
+  payload: {atk: 1000, defense: 500, skill_ratio: 1.5, penetration: 0.2, crit: true, crit_multiplier: 2.5, damage_bonus: 0.35}
+  expected_damage: 3712
+
+- case_id: damage_floor_only_at_end
+  title: 中间不取整 (100-44.5)=55.5 -> 111.0 -> 122.1 -> 122
+  payload: {atk: 100, defense: 44.5, skill_ratio: 1.0, crit: true, crit_multiplier: 2.0, damage_bonus: 0.1}
+  expected_damage: 122
+
+- case_id: damage_floor_not_round
+  title: 55.5 向下取整为 55（不是四舍五入的 56）
+  payload: {atk: 100, defense: 44.5, skill_ratio: 1.0, crit: false, crit_multiplier: 1.0}
+  expected_damage: 55
+
+- case_id: damage_float_precision_gap
+  title: 浮点误差 200*1.15=229.99999999999997 -> 229（数学上应为 230）
+  payload: {atk: 200, defense: 0, skill_ratio: 1.0, damage_bonus: 0.15, crit: false}
+  expected_damage: 229
+
+- case_id: damage_huge_atk
+  title: 极大攻击力下公式不溢出
+  payload: {atk: 1000000000, defense: 0, skill_ratio: 1.0, crit: false}
+  expected_damage: 1000000000

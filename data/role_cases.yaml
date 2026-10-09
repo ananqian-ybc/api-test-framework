@@ -1,0 +1,25 @@
+# 创角接口反例数据：昵称规则 -> 必填、非空白、长度上限 12、类型必须为字符串
+- case_id: role_nickname_missing
+  title: 缺少昵称字段
+  payload: {}
+  expected_status: 422
+
+- case_id: role_nickname_blank
+  title: 昵称为纯空白
+  payload: {nickname: "    "}
+  expected_status: 422
+
+- case_id: role_nickname_too_long
+  title: 昵称超过 12 字符
+  payload: {nickname: 很长的昵称占位十二个字以上}
+  expected_status: 422
+
+- case_id: role_nickname_exactly_max_length
+  title: 昵称正好 12 字符（边界内）
+  payload: {nickname: 一二三四五六七八九十一二}
+  expected_status: 201
+
+- case_id: role_nickname_not_string
+  title: 昵称类型错误（数字）
+  payload: {nickname: 20261009}
+  expected_status: 422

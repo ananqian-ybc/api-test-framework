@@ -1,0 +1,26 @@
+# 登录接口反例数据：payload 直接发给 /api/login
+# 约定：422 = 请求形状/类型不合法；401 = 账号或密码错误
+- case_id: login_missing_password
+  title: 缺少密码字段
+  payload: {username: only_name}
+  expected_status: 422
+
+- case_id: login_blank_username
+  title: 用户名为纯空白
+  payload: {username: "   ", password: Test@123456}
+  expected_status: 422
+
+- case_id: login_username_not_string
+  title: 用户名类型错误（数字）
+  payload: {username: 20261009, password: Test@123456}
+  expected_status: 422
+
+- case_id: login_password_empty
+  title: 密码为空字符串
+  payload: {username: player_x, password: ""}
+  expected_status: 422
+
+- case_id: login_password_wrong
+  title: 密码错误
+  payload: {username: player_x, password: Wrong@123456}
+  expected_status: 401

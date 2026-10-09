@@ -1,0 +1,35 @@
+# 战斗结算入参反例：必填、下限、区间、类型
+- case_id: battle_atk_missing
+  title: 缺少 atk
+  payload: {defense: 0, skill_ratio: 1.0}
+  expected_status: 422
+
+- case_id: battle_atk_negative
+  title: atk 为负数
+  payload: {atk: -1, defense: 0, skill_ratio: 1.0}
+  expected_status: 422
+
+- case_id: battle_atk_not_number
+  title: atk 为字符串
+  payload: {atk: "100", defense: 0, skill_ratio: 1.0}
+  expected_status: 422
+
+- case_id: battle_skill_ratio_zero
+  title: skill_ratio 为 0（必须大于 0）
+  payload: {atk: 10, defense: 0, skill_ratio: 0}
+  expected_status: 422
+
+- case_id: battle_penetration_out_of_range
+  title: penetration 超过 1
+  payload: {atk: 10, defense: 0, skill_ratio: 1.0, penetration: 2}
+  expected_status: 422
+
+- case_id: battle_crit_rate_out_of_range
+  title: crit_rate 超过 1
+  payload: {atk: 10, defense: 0, skill_ratio: 1.0, crit_rate: 1.5}
+  expected_status: 422
+
+- case_id: battle_crit_not_bool
+  title: crit 传字符串
+  payload: {atk: 10, defense: 0, skill_ratio: 1.0, crit: "yes"}
+  expected_status: 422

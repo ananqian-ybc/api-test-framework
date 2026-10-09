@@ -1,0 +1,36 @@
+# 抽卡接口反例数据
+# 422 = 参数形状/类型/区间不合法；400 = 业务规则拒绝（只支持 1 连或 10 连）
+- case_id: gacha_times_missing
+  title: 缺少 times 字段
+  payload: {}
+  expected_status: 422
+
+- case_id: gacha_times_zero
+  title: times 为 0（低于下限）
+  payload: {times: 0}
+  expected_status: 422
+
+- case_id: gacha_times_negative
+  title: times 为负数
+  payload: {times: -10}
+  expected_status: 422
+
+- case_id: gacha_times_string
+  title: times 为字符串
+  payload: {times: "10"}
+  expected_status: 422
+
+- case_id: gacha_times_not_allowed
+  title: times 为 11（业务只支持 1/10 连）
+  payload: {times: 11}
+  expected_status: 400
+
+- case_id: gacha_seed_negative
+  title: seed 为负数
+  payload: {times: 1, seed: -1}
+  expected_status: 422
+
+- case_id: gacha_seed_float
+  title: seed 为小数
+  payload: {times: 1, seed: 1.5}
+  expected_status: 422
