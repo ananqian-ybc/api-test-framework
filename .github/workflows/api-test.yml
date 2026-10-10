@@ -8,6 +8,9 @@
 #    因此 runner 不需要 docker-compose 或预置环境。
 # 3. 产物必须可下载：报告/日志/Allure 原始结果一律上传，失败时靠它们定位。
 # 4. 最小权限：只读 contents，不授予多余 scope。
+# 5. action 必须是声明 node24 的版本：GitHub 已弃用 Node 20 运行时，声明 node20 的
+#    action 会强制跑在 Node 24 上并产生弃用警告（将来会变成硬失败）。
+#    注意 upload-artifact@v5 仍是 node20，必须用 v6 —— 升级前先看 action.yml 的 runs.using。
 
 name: api-test
 
@@ -38,9 +41,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.11"
           cache: pip
@@ -67,7 +70,7 @@ jobs:
 
       - name: 上传测试产物
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: test-artifacts-${{ github.run_number }}
           path: |
@@ -84,9 +87,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.11"
           cache: pip

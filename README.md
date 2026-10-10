@@ -70,6 +70,12 @@ python -m venv .venv
 > 踩过的坑：cron 写成 `0 19:00 * * *`（6 段）会让整个工作流 `startup_failure`——
 > 表现为 **0 个 job、无注解、`name` 回退显示成文件路径**；本地 YAML 能解析但 GitHub 拒绝。
 > 正确写法是 5 段 POSIX cron：`0 19 * * *`。
+>
+> 踩过的坑：GitHub 已弃用 Node 20 的 action 运行时，声明 `runs.using: node20` 的 action
+> 会被强制跑在 Node 24 上并产生弃用警告（将来变硬失败）。修复要升到**声明 node24 的版本**：
+> `checkout@v5`、`setup-python@v6`、`upload-artifact@v6`。注意 **`upload-artifact@v5` 仍是
+> node20**，凭直觉升一版会发现警告还在——判断依据是 action 仓库 `action.yml` 里的
+> `runs.using` 字段，而不是版本号大小。
 
 ---
 
